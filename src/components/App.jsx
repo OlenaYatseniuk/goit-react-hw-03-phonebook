@@ -5,23 +5,43 @@ import Container from './Container';
 import Section from './Section';
 import Filter from './Filter';
 
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+const LOCALE_STORAGE_KEY = 'contacts';
+
 export class App extends Component {
   state = {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ],
+    contacts: [],
     name: '',
     filter: '',
   };
 
+  componentDidMount(){
+    if(localStorage.getItem(LOCALE_STORAGE_KEY)){
+      const localContacts = JSON.parse( localStorage.getItem(LOCALE_STORAGE_KEY));
+      this.setState({
+        contacts: localContacts,
+      })
+    }
+  }
+
+  componentDidUpdate(prevProps, prevState){
+    if(prevState.contacts !== this.state.contacts){
+      localStorage.setItem(LOCALE_STORAGE_KEY, JSON.stringify(this.state.contacts))
+    }
+  }
+
   handleSubmitForm = newContact => {
     const {contacts} = this.state;
+
     if(contacts.find(({name})=> name.toLowerCase() === newContact.name.toLowerCase())){
-      alert(`${newContact.name} is already in your contacts list`);
+      toast.error(`${newContact.name} is already in your contacts list`);
       return;
+    }
+
+    if(!LOCALE_STORAGE_KEY){
+      localStorage.setItem()
     }
 
     this.setState(({contacts}) => {
@@ -59,13 +79,18 @@ export class App extends Component {
         </Section>
         <Section title="Contacts">
           <Container>
+            {contacts.length ?
+            <>
             <Filter
-              filter={filter}
-              onFilterHandle={this.handleFilterInput}
-            />
-            <ContactsList contacts={filter ? filteredContacts: contacts} filter={identicFilter} onDeleteContact={this.handleDeleteContact} />
+            filter={filter}
+            onFilterHandle={this.handleFilterInput}
+          />
+          <ContactsList contacts={filter ? filteredContacts: contacts} filter={identicFilter} onDeleteContact={this.handleDeleteContact} />
+            </>
+            : <div>There are no contacts here=( Please add a new contact.</div>}
           </Container>
         </Section>
+        <ToastContainer position='top-right' autoClose={3000}/>
       </>
     );
   }
